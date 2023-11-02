@@ -1,0 +1,13 @@
+diff --git a/node_modules/@grpc/grpc-js/build/src/client.js b/node_modules/@grpc/grpc-js/build/src/client.js
+index 79b1adc..5302492 100644
+--- a/node_modules/@grpc/grpc-js/build/src/client.js
++++ b/node_modules/@grpc/grpc-js/build/src/client.js
+@@ -31,7 +31,7 @@ function isFunction(arg) {
+     return typeof arg === 'function';
+ }
+ function getErrorStackString(error) {
+-    return error.stack.split('\n').slice(1).join('\n');
++    return error?.stack?.split('\n')?.slice(1)?.join('\n');
+ }
+ /**
+  * A generic gRPC client. Primarily useful as a base class for all generated

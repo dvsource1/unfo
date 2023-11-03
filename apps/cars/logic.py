@@ -60,7 +60,7 @@ def process_car_page(soup, url):
     print(f"Saved seller: {sid}")
     the_dict['seller'] = sid
 
-  # print(the_dict)
+  print(the_dict)
   # add_entry('cars', the_dict)
 
 def goto_car_page(url: str, headers):

@@ -3,6 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from apps.cars.logic import process_car_results
+from apps.requests.model import Request
 
 
 def extract_results_count(soup) -> tuple or None:
@@ -29,11 +30,13 @@ def find_results(soup):
   return soup.find_all('li', class_='item round')
   
     
-def process(soup, headers):
+def process(request: Request, soup, headers):
   results = find_results(soup)
   if len(results) > 0:
     process_car_results(results, headers)
-  # goto_nextd_page(get_next_page_url(soup), headers)
+  
+  if request.is_paginate:
+    goto_next_page(get_next_page_url(soup), headers)
 
     
 def goto_next_page(url: str, headers):
@@ -50,12 +53,8 @@ def goto_next_page(url: str, headers):
       process(soup, headers)
 
 
-def scrape_riyasewana(base_url: str):
-  headers = {
-      'User-Agent': 'PostmanRuntime/7.34.0'
-  }
-  
-  response = requests.get(base_url, headers=headers)
+def scrape_riyasewana(request: Request, headers):
+  response = requests.get(request.base, headers=headers)
   
   if response.status_code == 200:
     soup = BeautifulSoup(response.text, 'html.parser')
@@ -63,7 +62,7 @@ def scrape_riyasewana(base_url: str):
     results_count = extract_results_count(soup)
     if results_count:
       total_results, results_per_page = results_count
-      process(soup, headers)
+      process(request, soup, headers)
   else:
     print(f"Error: {response.status_code}")
     print(response.text)

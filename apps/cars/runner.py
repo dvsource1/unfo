@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 
 from apps.cars.logic import process_car_results
 
+
 def extract_results_count(soup) -> tuple or None:
   results_elm = soup.find('h2', class_='results')
   
@@ -13,7 +14,8 @@ def extract_results_count(soup) -> tuple or None:
     return (total, end - actual_start)
   else:
     return None
-  
+
+
 def get_next_page_url(soup) -> str or None:
   next_page_elm = soup.find('a', string='Next')
   
@@ -21,11 +23,18 @@ def get_next_page_url(soup) -> str or None:
     return next_page_elm['href']
   else:
     return None
+
+
+def find_results(soup):
+  return soup.find_all('li', class_='item round')
   
-def process_results(soup):
-  results = soup.find_all('li', class_='item round')
+    
+def process(soup, headers):
+  results = find_results(soup)
   if len(results) > 0:
-    process_car_results(results)
+    process_car_results(results, headers)
+  # goto_nextd_page(get_next_page_url(soup), headers)
+
     
 def goto_next_page(url: str, headers):
   if url is None:
@@ -38,8 +47,8 @@ def goto_next_page(url: str, headers):
     response = requests.get(actual_url, headers=headers)
     if response.status_code == 200:
       soup = BeautifulSoup(response.text, 'html.parser')
-      process_results(soup)
-      goto_next_page(get_next_page_url(soup), headers)
+      process(soup, headers)
+
 
 def scrape_riyasewana(base_url: str):
   headers = {
@@ -54,10 +63,7 @@ def scrape_riyasewana(base_url: str):
     results_count = extract_results_count(soup)
     if results_count:
       total_results, results_per_page = results_count
-      
-      process_results(soup)
-      goto_next_page(get_next_page_url(soup), headers)
-      
+      process(soup, headers)
   else:
     print(f"Error: {response.status_code}")
     print(response.text)

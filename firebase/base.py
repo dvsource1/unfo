@@ -6,7 +6,12 @@ from firebase_admin import firestore
 def init_firebase():
     cred = credentials.Certificate('./firebase/firebase-service.json')
     return firebase_admin.initialize_app(cred)
-    
+
+
 def get_db():
     app = init_firebase()
     return firestore.client()
+
+
+def cleanup_firestore():
+    firebase_admin.delete_app(firebase_admin.get_app())

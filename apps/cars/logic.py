@@ -1,10 +1,9 @@
-from datetime import datetime
 import re
 import requests
+from datetime import datetime
 from bs4 import BeautifulSoup
-from firebase_admin import firestore
+from apps.cars.model import Car, Seller
 
-from firebase.logic import add_entry, set_entry
 from util.string_utils import make_it_number
 
 
@@ -28,10 +27,8 @@ def save_seller(seller_info, phone=None):
   
   if phone is not None:
     seller_info['phone'] = phone
-    return set_entry('sellers', phone, seller_info)
-  
-  return None
- 
+    Seller.from_dict(seller_info).update()
+
 
 def process_car_page(soup, url):
   seller_elm = soup.find('h2')
@@ -47,8 +44,10 @@ def process_car_page(soup, url):
       key = 'Mileage'
     elif key == 'Fuel Type':
       key = 'Fuel'
+    elif key == 'Engine (cc)':
+      key = 'Engine'
 
-    if key in ['Contact', 'Price', 'YOM', 'Mileage']:
+    if key in ['Contact', 'Price', 'YOM', 'Mileage', 'Engine']:
       value = make_it_number(value)
 
     if key not in ['Get Leasing']:
@@ -56,12 +55,14 @@ def process_car_page(soup, url):
       
   seller_info = get_seller_info(seller_elm)
   if seller_info:
-    sid = save_seller(seller_info, the_dict.get('contact'))
-    print(f"Saved seller: {sid}")
-    the_dict['seller'] = sid
+    phone = the_dict.get('contact')
+    save_seller(seller_info, phone)
+    print(f"Saved seller: {seller_info}")
+    the_dict['seller'] = phone
+    the_dict['timestamp'] = seller_info.get('datetime')
 
   print(the_dict)
-  # add_entry('cars', the_dict)
+  Car.from_dict(the_dict).save()
 
 def goto_car_page(url: str, headers):
   print(f"Going to car page: {url}")

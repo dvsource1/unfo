@@ -1,33 +1,11 @@
 import re
 import requests
-from datetime import datetime
 from bs4 import BeautifulSoup
-from apps.cars.model import Car, Seller
+from apps.cars.entity import Car
+from apps.cars.logic import extract_results_count, get_next_page_url, get_seller_info, save_seller
 
-from util.string_utils import make_it_number
-
-
-def get_seller_info(seller_elm):
-  if seller_elm is None:
-    return None
-  text = seller_elm.text.strip()
-  pattern = r'Posted by (?P<name>.+) on (?P<datetime>.+), (?P<location>.+)'
-  match = re.search(pattern, text)
-  
-  actual_datetime = datetime.strptime(match.group('datetime'), '%Y-%m-%d %I:%M %p')
-  
-  return {
-    'name': match.group('name'),
-    'location': match.group('location'),
-    'datetime': actual_datetime
-  }
-
-def save_seller(seller_info, phone=None):
-  print(f"Saving seller: {seller_info}")
-  
-  if phone is not None:
-    seller_info['phone'] = phone
-    Seller.from_dict(seller_info).update()
+from apps.requests.entity import Request
+from src.utils import make_it_number
 
 
 def process_car_page(soup, url):
@@ -81,3 +59,44 @@ def process_car_results(results, headers):
       url = result.find('div', class_='imgbox').find('a')['href'].strip()
       goto_car_page(url, headers)
       print(f"{title} - {url}")
+
+
+def process(request: Request, soup, headers):
+  results = soup.find_all('li', class_='item round')
+  if len(results) > 0:
+    process_car_results(results, headers)
+  
+  if request.is_paginate:
+    next_page_elm = soup.find('a', string='Next')
+    if next_page_elm:
+      goto_next_page(next_page_elm['href'], headers)
+
+    
+def goto_next_page(url: str, headers):
+  if url is None:
+    print("No more pages to go to")
+    return
+  else:
+    actual_url = f"https:{url}"
+    print(f"Going to next page: {actual_url}")
+    
+    response = requests.get(actual_url, headers=headers)
+    if response.status_code == 200:
+      soup = BeautifulSoup(response.text, 'html.parser')
+      process(soup, headers)
+
+
+def scrape_riyasewana(request: Request, headers):
+  response = requests.get(request.base, headers=headers)
+  
+  if response.status_code == 200:
+    soup = BeautifulSoup(response.text, 'html.parser')
+    
+    results_elm = soup.find('h2', class_='results')
+    results_count = extract_results_count(results_elm.text if results_elm else None )
+    if results_count:
+      total_results, results_per_page = results_count
+      process(request, soup, headers)
+  else:
+    print(f"Error: {response.status_code}")
+    print(response.text)

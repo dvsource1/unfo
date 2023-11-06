@@ -176,3 +176,5 @@ dist
 
 # Firebase
 firebase-service.json
+
+__pycache__/

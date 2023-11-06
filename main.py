@@ -1,5 +1,5 @@
 from apps.cars.runner import scrape_riyasewana
-from apps.requests.model import Source
+from apps.requests.entity import Source
 from apps.requests.runner import scrape_requests
 from firebase.base import cleanup_firestore
 from firebase.logic import get_entries

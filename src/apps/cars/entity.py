@@ -31,9 +31,48 @@ class Seller:
     return set_entry('sellers', self.phone, self.to_dict())
 
 
-class Car:
-  def __init__(self, url, make, model, year, mileage, gear, fuel, engine, price, seller, timestamp, options, details):
+class Sell:
+  def __init__(self, car, url, source, price, location, timestamp):
+    self.car = car
     self.url = url
+    self.source = source
+    self.price = price
+    self.location = location
+    self.timestamp = timestamp
+    
+  def to_dict(self):
+    return {
+      'car': self.car,
+      'url': self.url,
+      'source': self.source,
+      'price': self.price,
+      'location': self.location,
+      'timestamp': self.timestamp
+    }
+  
+  @classmethod
+  def from_dict(cls, data):
+    return Sell(
+      data.get('car'),
+      data.get('url'),
+      data.get('source'),
+      data.get('price'),
+      data.get('location'),
+      data.get('timestamp')
+    )
+  
+  def __repr__(self):
+    return f"Sell: {str(self.to_dict())}"
+  
+  def __str__(self) -> str:
+    return str(self.to_dict())
+  
+  def save(self):
+    return add_entry('sells', self.to_dict())
+
+
+class Car:
+  def __init__(self, make, model, year, mileage, gear, fuel, engine, options, details):
     self.make = make
     self.model = model
     self.year = year
@@ -41,15 +80,11 @@ class Car:
     self.gear = gear
     self.fuel = fuel
     self.engine = engine
-    self.price = price
-    self.seller = seller
-    self.timestamp = timestamp
     self.options = options
     self.details = details
     
   def to_dict(self):
     return {
-      'url': self.url,
       'make': self.make,
       'model': self.model,
       'year': self.year,
@@ -57,9 +92,6 @@ class Car:
       'gear': self.gear,
       'fuel': self.fuel,
       'engine': self.engine,
-      'price': self.price,
-      'seller': self.seller,
-      'timestamp': self.timestamp,
       'options': self.options,
       'details': self.details
     }
@@ -67,7 +99,6 @@ class Car:
   @classmethod
   def from_dict(cls, data):
     return Car(
-      data.get('url'),
       data.get('make'),
       data.get('model'),
       data.get('year'),
@@ -75,9 +106,6 @@ class Car:
       data.get('gear'),
       data.get('fuel'),
       data.get('engine'),
-      data.get('price'),
-      data.get('seller'),
-      data.get('timestamp'),
       data.get('options'),
       data.get('details')
     )

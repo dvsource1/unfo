@@ -1,5 +1,5 @@
 from apps.cars.runner import scrape_riyasewana
-from apps.requests.model import Request, Source
+from apps.requests.entity import Request, Source
 
 
 headers = {
